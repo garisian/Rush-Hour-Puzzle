@@ -32,7 +32,12 @@ class rushhour(StateSpace):
 
         self.makeBoard()          
         self.addVehicles()
+        self.addGoalVeh()
 
+    def addGoalVeh(self):
+        for vehicle in self.vehicles:
+            if(vehicle[4]):
+                self.goalVehicle = vehicle
 
     def addVehicles(self):
         """Add Vehicles to the generated board"""
@@ -111,7 +116,7 @@ class rushhour(StateSpace):
         for vehicle_temp in self.vehicles:
             occupiedSpots += vehicle[2]
             if(vehicle_temp[0] == vehicle[0]):
-                new_vehicles.append([vehicle[0],(vehicleX,vehicleY),vehicle[2],vehicle[3],vehicle[4]])
+                new_vehicles.append([vehicle[0],(vehicleX,vehicleY),vehicle[2],vehicle[3],vehicle[4]]	)
             else:
                 new_vehicles.append(vehicle_temp)
         newRushHour = rushhour("move_vehicle("+vehicle[0]+", '"+direction+"')", self.gval + 1, self.numColumns, self.numRows, new_vehicles, self.goalEntrance, self.goalDirection, self)
@@ -130,7 +135,7 @@ class rushhour(StateSpace):
     def hashable_state(self):
         #IMPLEMENT
         '''Return a data item that can be used as a dictionary key to UNIQUELY represent the state.'''
-        return (self.vehicles,(self.numColumns, self.numRows))        
+        return self.vehicles        
 
     def print_state(self):
         #DO NOT CHANGE THIS FUNCTION---it will be used in auto marking
@@ -188,6 +193,7 @@ class rushhour(StateSpace):
 
 def heur_zero(state):
     '''Zero Heuristic use to make A* search perform uniform cost search'''
+
     return 0
 
 
@@ -208,7 +214,113 @@ def heur_min_moves(state):
     #Our heuristic value is the minimum of MOVES1 and MOVES2 over all goal vehicles.
     #You should implement this heuristic function exactly, even if it is
     #tempting to improve it.
-    return 0
+    
+    #print ("---------start-----'")
+    goalVehicle = ""
+    for vehicle in state.vehicles:
+        if(vehicle[4]):
+            goalVehicle = vehicle
+    simpleRushHour = make_init_state((state.numColumns,state.numRows), [goalVehicle], state.goalEntrance, state.goalDirection)
+    searchList = [simpleRushHour]
+    visited = [] 
+    while(searchList):
+        combination = visited
+        combination.extend(searchList)
+        firstElement = searchList[0]
+        searchList.remove(firstElement)
+        for element in combination:
+            if(element.hashable_state() == firstElement.hashable_state()):
+                pass
+        
+        visited.append(firstElement)
+        if(rushhour_goal_fn(firstElement)):
+            return firstElement.gval
+        successors = firstElement.successors()
+        switch = 0
+        for successie in successors:
+            switch = 0
+            for element in combination:
+                if(element.hashable_state() == successie.hashable_state()):
+                    switch = 1
+            if(switch == 0):
+                searchList.append(successie)
+            
+        
+    #for state in simpleRushHour.successors():
+    #    print(state.vehicles)
+    
+    #print ("---------done-----'\n\n")
+    #s = simpleRushHour.move_vehicle(goalVehicle,'E')
+    #print(rushhour_goal_fn(s))
+    #s = s.move_vehicle(s.goalVehicle,'E')
+    #print(rushhour_goal_fn(s))
+    #s = s.move_vehicle(s.goalVehicle,'E')
+    #print(rushhour_goal_fn(s))
+    #s = s.move_vehicle(s.goalVehicle,'E')
+    #print(rushhour_goal_fn(s))
+    #print(s.vehicles)
+    #print(goalVehicle)
+    """
+    print(simpleRushHour.vehicles)
+    if(rushhour_goal_fn(simpleRushHour)):
+        return 0
+    costVal = 0
+    s = simpleRushHour
+    w = simpleRushHour
+    print(vehicle[3])
+    if(vehicle[3]):
+        while(1):
+            costVal += 1
+            s = s.move_vehicle(goalVehicle,'E')
+            w = w.move_vehicle(goalVehicle,'W')
+            #print(s.vehicles)
+            #print(w.vehicles)
+            if(rushhour_goal_fn(s) or rushhour_goal_fn(w)):
+                return costVal
+    else:
+        #while(1):
+            costVal += 1
+            s = s.move_vehicle(goalVehicle,'N')
+            w = w.move_vehicle(goalVehicle,'W')
+            if(rushhour_goal_fn(s) or rushhour_goal_fn(w)):
+                return costVal
+    """
+    """
+    visited = list()
+    toDigestCost = list()
+    toDigestObject = list()
+
+    simpleRushHour = make_init_state((state.numColumns,state.numRows), [goalVehicle], state.goalEntrance, state.goalDirection)
+    toDigestCost.append(0)
+    toDigestObject.append(simpleRushHour)
+
+    while(toDigestObject):
+        cheapestObject = toDigestObject[toDigestCost.index(min(toDigestCost))]
+        print(cheapestObject.vehicles)
+        if(rushhour_goal_fn(cheapestObject)):
+            return min(toDigestCost)
+        toDigestObject.remove(cheapestObject)
+        toDigestCost.remove(min(toDigestCost))
+        cheapestObject.hashable_state().sort()
+        visited.append(cheapestObject.hashable_state())
+
+        successors = simpleRushHour.successors()
+
+        for digestObject in successors:
+            flag = 0
+            for element in visited:
+                digestObject.hashable_state().sort()
+                #print(element)
+                #print(digestObject.hashable_state())
+                #print("----------")
+                if(element == digestObject.hashable_state()):
+                    flag = 1
+            if not flag:
+                toDigestObject.append(digestObject)
+                toDigestCost.append(digestObject.gval)                
+        print(len(visited))
+    """
+    return 2
 
 def rushhour_goal_fn(state):
     #IMPLEMENT
@@ -235,6 +347,8 @@ def rushhour_goal_fn(state):
                 newX = 0
             if(state.cells[goalState[1]][newX] == goalVehicle[0]):
                 return False
+        if(state.goalDirection == 'S' or state.goalDirection == 'N'):
+            return False 
     else:
         if (state.goalDirection == 'N'):
             newY = goalState[1] - 1
@@ -248,6 +362,8 @@ def rushhour_goal_fn(state):
                 newY = 0
             if(state.cells[newY][goalState[0]] == goalVehicle[0]):
                 return False
+        if(state.goalDirection == 'E' or state.goalDirection == 'N'):
+            return False 
     return True
 
 def getGoalVehicle(vehicles):
@@ -314,7 +430,6 @@ def get_board(vehicle_statuses, board_properties):
                 # vehicle is vertical
                 board[(vs[1][1] + i) % m][vs[1][0]] = vs[0][0]
                 # represent vehicle as first character of its name
-    # print goal
     board[board_properties[1][1]][board_properties[1][0]] = board_properties[2]
     return board
 
@@ -379,8 +494,8 @@ def test(nvehicles, board_size):
 
 
 if __name__ == '__main__':
-    s = make_init_state((7,7), [['gv', (4, 1), 2, True, True]], (4, 1), 'E')
-    d = make_init_state((7,7), [['gv', (4, 0), 2, False, True]], (4, 1), 'E')
-    
-   # print (d.move_vehicle(['gv', (6, 6), 2, True, True], 'E'))
-    
+    s = make_init_state((7, 7), [['gv', (1, 1), 2, True, True]], (4, 1), 'E')
+
+        
+    s.move_vehicle(['gv', (6, 6), 2, True, True], 'E')
+    s.successors()   
