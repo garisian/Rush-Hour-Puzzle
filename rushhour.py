@@ -215,7 +215,6 @@ def heur_min_moves(state):
     #You should implement this heuristic function exactly, even if it is
     #tempting to improve it.
     
-    #print ("---------start-----'")
     goalVehicle = ""
     for vehicle in state.vehicles:
         if(vehicle[4]):
@@ -320,7 +319,7 @@ def heur_min_moves(state):
                 toDigestCost.append(digestObject.gval)                
         print(len(visited))
     """
-    return 2
+    return 0
 
 def rushhour_goal_fn(state):
     #IMPLEMENT
