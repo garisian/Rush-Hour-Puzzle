@@ -93,6 +93,7 @@ class rushhour(StateSpace):
         vehicleX = vehicle[1][0]
         vehicleY = vehicle[1][1]
 
+        # change the coordinates and reassign them when they go beyond the board size
         if(direction == 'N'):
             vehicleY -= 1
             if(vehicleY < 0):
@@ -222,6 +223,8 @@ def heur_min_moves(state):
     simpleRushHour = make_init_state((state.numColumns,state.numRows), [goalVehicle], state.goalEntrance, state.goalDirection)
     searchList = [simpleRushHour]
     visited = [] 
+    #store any element we need to investigae in searchList. every element we checked goes into visited. Everytime we get successors
+    #we check if it exists in searchList or visited. if not, then add it to searchList
     while(searchList):
         combination = visited
         combination.extend(searchList)
@@ -243,83 +246,7 @@ def heur_min_moves(state):
                     switch = 1
             if(switch == 0):
                 searchList.append(successie)
-            
-        
-    #for state in simpleRushHour.successors():
-    #    print(state.vehicles)
-    
-    #print ("---------done-----'\n\n")
-    #s = simpleRushHour.move_vehicle(goalVehicle,'E')
-    #print(rushhour_goal_fn(s))
-    #s = s.move_vehicle(s.goalVehicle,'E')
-    #print(rushhour_goal_fn(s))
-    #s = s.move_vehicle(s.goalVehicle,'E')
-    #print(rushhour_goal_fn(s))
-    #s = s.move_vehicle(s.goalVehicle,'E')
-    #print(rushhour_goal_fn(s))
-    #print(s.vehicles)
-    #print(goalVehicle)
-    """
-    print(simpleRushHour.vehicles)
-    if(rushhour_goal_fn(simpleRushHour)):
-        return 0
-    costVal = 0
-    s = simpleRushHour
-    w = simpleRushHour
-    print(vehicle[3])
-    if(vehicle[3]):
-        while(1):
-            costVal += 1
-            s = s.move_vehicle(goalVehicle,'E')
-            w = w.move_vehicle(goalVehicle,'W')
-            #print(s.vehicles)
-            #print(w.vehicles)
-            if(rushhour_goal_fn(s) or rushhour_goal_fn(w)):
-                return costVal
-    else:
-        #while(1):
-            costVal += 1
-            s = s.move_vehicle(goalVehicle,'N')
-            w = w.move_vehicle(goalVehicle,'W')
-            if(rushhour_goal_fn(s) or rushhour_goal_fn(w)):
-                return costVal
-    """
-    """
-    visited = list()
-    toDigestCost = list()
-    toDigestObject = list()
-
-    simpleRushHour = make_init_state((state.numColumns,state.numRows), [goalVehicle], state.goalEntrance, state.goalDirection)
-    toDigestCost.append(0)
-    toDigestObject.append(simpleRushHour)
-
-    while(toDigestObject):
-        cheapestObject = toDigestObject[toDigestCost.index(min(toDigestCost))]
-        print(cheapestObject.vehicles)
-        if(rushhour_goal_fn(cheapestObject)):
-            return min(toDigestCost)
-        toDigestObject.remove(cheapestObject)
-        toDigestCost.remove(min(toDigestCost))
-        cheapestObject.hashable_state().sort()
-        visited.append(cheapestObject.hashable_state())
-
-        successors = simpleRushHour.successors()
-
-        for digestObject in successors:
-            flag = 0
-            for element in visited:
-                digestObject.hashable_state().sort()
-                #print(element)
-                #print(digestObject.hashable_state())
-                #print("----------")
-                if(element == digestObject.hashable_state()):
-                    flag = 1
-            if not flag:
-                toDigestObject.append(digestObject)
-                toDigestCost.append(digestObject.gval)                
-        print(len(visited))
-    """
-    return 0
+    return -1
 
 def rushhour_goal_fn(state):
     #IMPLEMENT
@@ -332,7 +259,8 @@ def rushhour_goal_fn(state):
     boardY = state.numRows
     if(state.cells[goalState[1]][goalState[0]] != goalVehicle[0]):
         return False
-    #if it's horizontal
+    #if it's horizontal. When the back of the car or front isn't int he correct spot, return false
+    #also return false if the directions dont' line up with the goal state
     if(goalVehicle[3]):
         if(state.goalDirection == 'W'):
             newX = goalState[0] - 1
@@ -492,9 +420,9 @@ def test(nvehicles, board_size):
 
 
 
-if __name__ == '__main__':
-    s = make_init_state((7, 7), [['gv', (1, 1), 2, True, True]], (4, 1), 'E')
+#if __name__ == '__main__':
+    #s = make_init_state((7, 7), [['gv', (1, 1), 2, True, True]], (4, 1), 'E')
 
         
-    s.move_vehicle(['gv', (6, 6), 2, True, True], 'E')
-    s.successors()   
+    #s.move_vehicle(['gv', (6, 6), 2, True, True], 'E')
+    #s.successors()   
